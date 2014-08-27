@@ -1,7 +1,7 @@
 #include "ros/ros.h"
-#include "nav_msgs/MapMetaData"
-#include "nav_msgs/OccupancyGrid"
-#include "sensor_msgs/LaserScan"
+#include "sensor_msgs/LaserScan.h"
+#include "nav_msgs/MapMetaData.h"
+#include "nav_msgs/OccupancyGrid.h"
 #include <sstream>
 
 //Global var of map meta data
@@ -17,10 +17,12 @@ void chatterCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
 
   nav_msgs::OccupancyGrid newGrid = OGridFromLScan(msg, mmd);
 
+  //remake publisher? or just constantly update a global map that then gets pushed each spin? 
   chatter_pub.publish(newGrid);
 
 }
 
+//This is where the work gets done
 nav_msgs::OccupancyGrid OGridFromLScan(sensor_msgs::LaserScan lmsg, nav_msgs::MapMetaData mapmetad)
 {
 
@@ -30,23 +32,9 @@ nav_msgs::OccupancyGrid OGridFromLScan(sensor_msgs::LaserScan lmsg, nav_msgs::Ma
 
 int main(int argc, char **argv)
 {
-  /**
-   * The ros::init() function needs to see argc and argv so that it can perform
-   * any ROS arguments and name remapping that were provided at the command line. For programmatic
-   * remappings you can use a different version of init() which takes remappings
-   * directly, but for most command-line programs, passing argc and argv is the easiest
-   * way to do it.  The third argument to init() is the name of the node.
-   *
-   * You must call one of the versions of ros::init() before using any other
-   * part of the ROS system.
-   */
+  
   ros::init(argc, argv, "scantomap");
 
-  /**
-   * NodeHandle is the main access point to communications with the ROS system.
-   * The first NodeHandle constructed will fully initialize this node, and the last
-   * NodeHandle destructed will close down the node.
-   */
   ros::NodeHandle n;
 
  
