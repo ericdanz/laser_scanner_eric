@@ -24,10 +24,11 @@ class oGridMaker {
 	public:
 		oGridMaker(ros::NodeHandle &nh)
 		{
-			n = nh;
+            ROS_INFO("inside constructor");
+            n = nh;
             mapper_pub = n.advertise<nav_msgs::OccupancyGrid>("map_eric", 10, true);
 
-			// or this->scannerCallBack
+            // or scannerCallBack
             sub = n.subscribe("scan", 10, &oGridMaker::scannerCallBack, this);
 
             //make map meta data
@@ -38,10 +39,9 @@ class oGridMaker {
             mmd.origin = createPose();
 
             mapGrid.info = mmd;
-            for (int i=0;i++;i < (this->mmd.width * this->mmd.height))
-            {
-                mapGrid.data[i] = -1;
-            }
+            std::vector<signed char> unkdata (50,-1);
+            mapGrid.data = unkdata;
+            ROS_INFO("filling in with unknown");
 
 		}
 
@@ -61,21 +61,22 @@ class oGridMaker {
             geometry_msgs::Pose thispose;
             thispose.position = thisp;
             thispose.orientation = thisq;
-
+            ROS_INFO("created a pose");
             return thispose;
         }
 
 		//this is where the work gets done
         void OGridFromLScan(const sensor_msgs::LaserScan::ConstPtr& msg)
 		{	
+            //ROS_INFO("inside gfroms");
             //update time
-            this->mmd.map_load_time = msg->header.stamp;
+            mmd.map_load_time = msg->header.stamp;
 
 
 
             //angle to this scan, with distance, should determine which tiles it hit on as filled
               //number of
-            for (int i=0;i++;i < msg->ranges.size())
+            for (int i=0; i < msg->ranges.size(); i++)
             {
                 float thisangle = msg->angle_min + i*msg->angle_increment;
                 float thisrange = msg->ranges[i];
@@ -93,19 +94,20 @@ class oGridMaker {
                 //downgrade grids between that range and my position
                 updateNegOccGrid(thisrange,thisangle);
             }
-            this->mapGrid.info = this->mmd;
-
+            mapGrid.info = mmd;
 
 		}
 
 
         void updatePosOccGrid(int x, int y)
         {
+            ROS_INFO("inside pos");
           updateOccGrid(x,y,1);
         }
 
         void updateNegOccGrid(float range, float angle)
         {
+            ROS_INFO("inside neg");
            //subtract confidence from grids between that grid and my position
 
             //get the new range (subtract one grid length from my range based on the angle)
@@ -135,21 +137,23 @@ class oGridMaker {
         {
            //add confidence to grid that range hit in
            int grid = x*10 + y;
-           this->mapGrid.data[grid] += change;
-           if (this->mapGrid.data[grid] > 100)
+           mapGrid.data[grid] += change;
+           ROS_INFO("updating map grids");
+           if (mapGrid.data[grid] > 100)
            {
-               this->mapGrid.data[grid] = 100;
+               mapGrid.data[grid] = 100;
            }
-           else if (this->mapGrid.data[grid] < 0)
+           else if (mapGrid.data[grid] < 0)
            {
-               this->mapGrid.data[grid] = 0;
+               mapGrid.data[grid] = 0;
            }
         }
 
 	
         void scannerCallBack(const sensor_msgs::LaserScan::ConstPtr& msg)
 		{
-	  		//Figure out if I need to use another pointer for this msg
+
+            //ROS_INFO("Inside Callback");
 
             OGridFromLScan(msg);
 
@@ -170,7 +174,7 @@ int main(int argc, char **argv)
   
   	ros::NodeHandle nh;
 
-	oGridMaker ogm(nh);
+    oGridMaker ogm = oGridMaker(nh);
 
   	//ogmaker.initialize(nh);
 
