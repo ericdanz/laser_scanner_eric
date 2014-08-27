@@ -18,7 +18,7 @@ class oGridMaker {
 	public:
 		oGridMaker(ros::NodeHandle &nh)
 		{
-			n = nh
+			n = nh;
 			mapper_pub = n.advertise<nav_msgs::OccupancyGrid>("map_data", 1, true);
 
 			// or this->scannerCallBack
@@ -45,9 +45,6 @@ class oGridMaker {
 
 
 } ogmaker;
-
-
-
 
 
 
