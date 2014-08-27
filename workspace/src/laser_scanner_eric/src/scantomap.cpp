@@ -66,10 +66,11 @@ class oGridMaker {
         }
 
 		//this is where the work gets done
-        nav_msgs::OccupancyGrid OGridFromLScan(const sensor_msgs::LaserScan::ConstPtr& msg)
+        void OGridFromLScan(const sensor_msgs::LaserScan::ConstPtr& msg)
 		{	
             //update time
-            mmd.map_load_time = msg->header.stamp;
+            this->mmd.map_load_time = msg->header.stamp;
+
 
 
             //angle to this scan, with distance, should determine which tiles it hit on as filled
@@ -92,8 +93,8 @@ class oGridMaker {
                 //downgrade grids between that range and my position
                 updateNegOccGrid(thisrange,thisangle);
             }
-            mapGrid.info = mmd;
-            return mapGrid;
+            this->mapGrid.info = this->mmd;
+
 
 		}
 
@@ -134,14 +135,14 @@ class oGridMaker {
         {
            //add confidence to grid that range hit in
            int grid = x*10 + y;
-           mapGrid.data[grid] += change;
-           if (mapGrid.data[grid] > 100)
+           this->mapGrid.data[grid] += change;
+           if (this->mapGrid.data[grid] > 100)
            {
-               mapGrid.data[grid] = 100;
+               this->mapGrid.data[grid] = 100;
            }
-           else if (mapGrid.data[grid] < 0)
+           else if (this->mapGrid.data[grid] < 0)
            {
-               mapGrid.data[grid] = 0;
+               this->mapGrid.data[grid] = 0;
            }
         }
 
@@ -150,7 +151,7 @@ class oGridMaker {
 		{
 	  		//Figure out if I need to use another pointer for this msg
 
-            mapGrid = OGridFromLScan(msg);
+            OGridFromLScan(msg);
 
 
 	  		mapper_pub.publish(mapGrid);
