@@ -9,6 +9,8 @@
 #include "nav_msgs/MapMetaData.h"
 #include "nav_msgs/OccupancyGrid.h"
 #include <sstream>
+#include "math.h"
+#include "stdio.h"
 
 
 
@@ -68,10 +70,53 @@ class oGridMaker {
               //number of
             for (i=0;i++;i < msg->ranges.size())
             {
+                float thisangle = msg->angle_min + i*msg->angle_increment;
+                float thisrange = msg->ranges[i];
+                float x = sin(thisangle)*thisrange;
+                float y = cos(thisangle)*thisrange;
 
+                x = x + 1.0;
+                y = y + 5.0;
+                ix = int(x);
+                iy = int(y);
+
+                //find the position on the occupancy grid
+                updatePosOccGrid(ix,iy,mapGrid);
+
+                //downgrade grids between that range and my position
+                updateNegOccGrid(x,y,mapGrid,thisangle);
             }
 
 		}
+
+        void updateOccGrid(int x, int y, const nav_msgs::OccupancyGridConstPtr& mapGrid, int change)
+        {
+           //add confidence to grid that range hit in
+           int grid = x*10 + y;
+           mapGrid->data[grid] += change;
+           if (mapGrid->data[grid] > 100)
+           {
+               mapGrid->data[grid] = 100;
+           }
+           else if (mapGrid->data[grid] < 0)
+           {
+               mapGrid->data[grid] = 0;
+           }
+        }
+
+        void updatePosOccGrid(int x, int y, const nav_msgs::OccupancyGridConstPtr& mapGrid)
+        {
+          updateOccGrid(x,y,mapGrid,1);
+        }
+
+        void updateNegOccGrid(float x, float y, const nav_msgs::OccupancyGridConstPtr& mapGrid, float angle)
+        {
+           //subtract confidence from grids between that grid and my position
+
+
+            updateOccGrid(x,y,mapGrid,-1);
+
+        }
 
 	
         void scannerCallBack(const sensor_msgs::LaserScan::ConstPtr& msg)
