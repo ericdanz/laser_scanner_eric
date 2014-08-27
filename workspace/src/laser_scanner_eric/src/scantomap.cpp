@@ -38,7 +38,7 @@ class oGridMaker {
             mmd.origin = createPose();
 
             mapGrid.info = mmd;
-            for (int i=0;i++;i<50)
+            for (int i=0;i++;i < (this->mmd.width * this->mmd.height))
             {
                 mapGrid.data[i] = -1;
             }
