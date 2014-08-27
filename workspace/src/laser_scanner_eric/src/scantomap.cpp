@@ -84,10 +84,11 @@ class oGridMaker {
                 updatePosOccGrid(ix,iy,mapGrid);
 
                 //downgrade grids between that range and my position
-                updateNegOccGrid(x,y,mapGrid,thisangle);
+                updateNegOccGrid(thisrange,mapGrid,thisangle);
             }
 
 		}
+
 
         void updateOccGrid(int x, int y, const nav_msgs::OccupancyGridConstPtr& mapGrid, int change)
         {
@@ -109,12 +110,30 @@ class oGridMaker {
           updateOccGrid(x,y,mapGrid,1);
         }
 
-        void updateNegOccGrid(float x, float y, const nav_msgs::OccupancyGridConstPtr& mapGrid, float angle)
+        void updateNegOccGrid(float range, const nav_msgs::OccupancyGridConstPtr& mapGrid, float angle)
         {
            //subtract confidence from grids between that grid and my position
 
+            //get the new range (subtract one grid length from my range based on the angle)
+            float subd = 1.0 / sin(angle);
+            range -= subd;
 
-            updateOccGrid(x,y,mapGrid,-1);
+            float x = sin(angle)*range;
+            float y = cos(angle)*range;
+
+            x = x + 1.0;
+            y = y + 5.0;
+            ix = int(x);
+            iy = int(y);
+
+            //this grid is between the hit range and my position, so I think it is empty
+            updateOccGrid(ix,iy,mapGrid,-1);
+
+            //recursively call until I get to my position
+            if (ix > 1 && iy > 5)
+            {
+                updateNegOccGrid(range,mapGrid,angle);
+            }
 
         }
 
