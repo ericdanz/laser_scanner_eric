@@ -25,7 +25,7 @@ class oGridMaker {
 		oGridMaker(ros::NodeHandle &nh)
 		{
 			n = nh;
-            mapper_pub = n.advertise<nav_msgs::OccupancyGrid>("map_eric", 1, true);
+            mapper_pub = n.advertise<nav_msgs::OccupancyGrid>("map_eric", 10, true);
 
 			// or this->scannerCallBack
             sub = n.subscribe("scan", 10, &oGridMaker::scannerCallBack, this);
@@ -35,7 +35,13 @@ class oGridMaker {
             mmd.resolution = 1.0;
             mmd.width = 10;
             mmd.height = 5;
-            mmd.origin = &oGridMaker::createPose();
+            mmd.origin = createPose();
+
+            mapGrid.info = mmd;
+            for (int i=0;i++;i<50)
+            {
+                mapGrid.data[i] = -1;
+            }
 
 		}
 
@@ -60,15 +66,15 @@ class oGridMaker {
         }
 
 		//this is where the work gets done
-        nav_msgs::OccupancyGrid OGridFromLScan(const sensor_msgs::LaserScan::ConstPtr& msg, const nav_msgs::MapMetaData::ConstPtr& mapmetad)
+        nav_msgs::OccupancyGrid OGridFromLScan(const sensor_msgs::LaserScan::ConstPtr& msg)
 		{	
             //update time
-            mapmetad->map_load_time = msg->header.stamp;
+            mmd.map_load_time = msg->header.stamp;
 
 
             //angle to this scan, with distance, should determine which tiles it hit on as filled
               //number of
-            for (i=0;i++;i < msg->ranges.size())
+            for (int i=0;i++;i < msg->ranges.size())
             {
                 float thisangle = msg->angle_min + i*msg->angle_increment;
                 float thisrange = msg->ranges[i];
@@ -77,40 +83,27 @@ class oGridMaker {
 
                 x = x + 1.0;
                 y = y + 5.0;
-                ix = int(x);
-                iy = int(y);
+                int ix = int(x);
+                int iy = int(y);
 
                 //find the position on the occupancy grid
-                updatePosOccGrid(ix,iy,mapGrid);
+                updatePosOccGrid(ix,iy);
 
                 //downgrade grids between that range and my position
-                updateNegOccGrid(thisrange,mapGrid,thisangle);
+                updateNegOccGrid(thisrange,thisangle);
             }
+            mapGrid.info = mmd;
+            return mapGrid;
 
 		}
 
 
-        void updateOccGrid(int x, int y, const nav_msgs::OccupancyGridConstPtr& mapGrid, int change)
+        void updatePosOccGrid(int x, int y)
         {
-           //add confidence to grid that range hit in
-           int grid = x*10 + y;
-           mapGrid->data[grid] += change;
-           if (mapGrid->data[grid] > 100)
-           {
-               mapGrid->data[grid] = 100;
-           }
-           else if (mapGrid->data[grid] < 0)
-           {
-               mapGrid->data[grid] = 0;
-           }
+          updateOccGrid(x,y,1);
         }
 
-        void updatePosOccGrid(int x, int y, const nav_msgs::OccupancyGridConstPtr& mapGrid)
-        {
-          updateOccGrid(x,y,mapGrid,1);
-        }
-
-        void updateNegOccGrid(float range, const nav_msgs::OccupancyGridConstPtr& mapGrid, float angle)
+        void updateNegOccGrid(float range, float angle)
         {
            //subtract confidence from grids between that grid and my position
 
@@ -123,18 +116,33 @@ class oGridMaker {
 
             x = x + 1.0;
             y = y + 5.0;
-            ix = int(x);
-            iy = int(y);
+            int ix = int(x);
+            int iy = int(y);
 
             //this grid is between the hit range and my position, so I think it is empty
-            updateOccGrid(ix,iy,mapGrid,-1);
+            updateOccGrid(ix,iy,-1);
 
             //recursively call until I get to my position
             if (ix > 1 && iy > 5)
             {
-                updateNegOccGrid(range,mapGrid,angle);
+                updateNegOccGrid(range,angle);
             }
 
+        }
+
+        void updateOccGrid(int x, int y, int change)
+        {
+           //add confidence to grid that range hit in
+           int grid = x*10 + y;
+           mapGrid.data[grid] += change;
+           if (mapGrid.data[grid] > 100)
+           {
+               mapGrid.data[grid] = 100;
+           }
+           else if (mapGrid.data[grid] < 0)
+           {
+               mapGrid.data[grid] = 0;
+           }
         }
 
 	
@@ -142,9 +150,9 @@ class oGridMaker {
 		{
 	  		//Figure out if I need to use another pointer for this msg
 
-            mapGrid = OGridFromLScan(msg, mmd);
+            mapGrid = OGridFromLScan(msg);
 
-	 	 	//remake publisher? or just constantly update a global map that then gets pushed each spin? 
+
 	  		mapper_pub.publish(mapGrid);
 
 		}
