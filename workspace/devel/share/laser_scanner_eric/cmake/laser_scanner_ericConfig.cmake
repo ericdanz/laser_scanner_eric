@@ -145,7 +145,7 @@ foreach(library ${libraries})
   endif()
 endforeach()
 
-set(laser_scanner_eric_EXPORTED_TARGETS "")
+set(laser_scanner_eric_EXPORTED_TARGETS "laser_scanner_eric_generate_messages_cpp;laser_scanner_eric_generate_messages_lisp;laser_scanner_eric_generate_messages_py")
 # create dummy targets for exported code generation targets to make life of users easier
 foreach(t ${laser_scanner_eric_EXPORTED_TARGETS})
   if(NOT TARGET ${t})
@@ -153,7 +153,7 @@ foreach(t ${laser_scanner_eric_EXPORTED_TARGETS})
   endif()
 endforeach()
 
-set(depends "")
+set(depends "roscpp;std_msgs;sensor_msgs;nav_msgs;message_runtime")
 foreach(depend ${depends})
   string(REPLACE " " ";" depend_list ${depend})
   # the package name of the dependency must be kept in a unique variable so that it is not overwritten in recursive calls
@@ -182,7 +182,7 @@ foreach(depend ${depends})
   list(APPEND laser_scanner_eric_EXPORTED_TARGETS ${${laser_scanner_eric_dep}_EXPORTED_TARGETS})
 endforeach()
 
-set(pkg_cfg_extras "")
+set(pkg_cfg_extras "laser_scanner_eric-msg-extras.cmake")
 foreach(extra ${pkg_cfg_extras})
   if(NOT IS_ABSOLUTE ${extra})
     set(extra ${laser_scanner_eric_DIR}/${extra})

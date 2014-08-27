@@ -7,7 +7,8 @@ project(laser_scanner_eric)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
-  common_msgs
+  sensor_msgs
+  nav_msgs
   message_generation
 )
 
@@ -47,8 +48,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
  add_message_files(
    FILES
-   InScan.msg
-   OutOccGrid.msg
+#   InScan.msg
+#   OutOccGrid.msg
 #   Message1.msg
 #   Message2.msg
  )
@@ -71,7 +72,8 @@ find_package(catkin REQUIRED COMPONENTS
  generate_messages(
    DEPENDENCIES
    std_msgs
-   common_msgs
+   sensor_msgs
+   nav_msgs
  )
 
 ###################################
@@ -86,7 +88,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES laser_scanner_eric
-  CATKIN_DEPENDS roscpp std_msgs common_msgs message_runtime
+  CATKIN_DEPENDS roscpp std_msgs sensor_msgs nav_msgs message_runtime
 #  DEPENDS system_lib
 )
 
@@ -165,3 +167,10 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+add_executable(talker src/talker.cpp)
+add_executable(scantomap src/scantomap.cpp)
+target_link_libraries(talker ${catkin_LIBRARIES})
+target_link_libraries(scantomap ${catkin_LIBRARIES})
+add_dependencies(talker beginner_tutorials_generate_messages_cpp)
+add_dependencies(scantomap beginner_tutorials_generate_messages_cpp)
