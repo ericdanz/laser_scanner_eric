@@ -16,7 +16,7 @@ class oGridMaker {
 		nav_msgs::MapMetaData mmd;
 		nav_msgs::OccupancyGrid mapGrid;
 	public:
-		void initialize(ros::NodeHandle &nh)
+		oGridMaker(ros::NodeHandle &nh)
 		{
 			n = nh
 			mapper_pub = n.advertise<nav_msgs::OccupancyGrid>("map_data", 1, true);
@@ -54,22 +54,24 @@ class oGridMaker {
 int main(int argc, char **argv)
 {
   
-  ros::init(argc, argv, "scantomap");
+  	ros::init(argc, argv, "scantomap");
   
-  ros::NodeHandle nh;
+  	ros::NodeHandle nh;
 
-  ogmaker.initialize(nh);
+	oGridMaker ogm(nh);
 
-  //ros::Publisher chatter_pub = n.advertise<nav_msgs::OccupancyGrid>("map_data", 1, true);
+  	//ogmaker.initialize(nh);
+
+  	//ros::Publisher chatter_pub = n.advertise<nav_msgs::OccupancyGrid>("map_data", 1, true);
 
 
-  //ros::Subscriber sub = n.subscribe("scan_data", 10, chatterCallback);
+  	//ros::Subscriber sub = n.subscribe("scan_data", 10, chatterCallback);
 
   
 
   
  
-  ros::spin();
+  	ros::spin();
 
 
 
