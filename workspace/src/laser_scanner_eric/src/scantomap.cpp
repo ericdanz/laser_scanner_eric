@@ -16,11 +16,11 @@
 
 class oGridMaker {
 	private: 
-		ros::NodeHandle n;
-		ros::Publisher mapper_pub;
-		ros::Subscriber sub;
-		nav_msgs::MapMetaData mmd;
-		nav_msgs::OccupancyGrid mapGrid;
+        ros::NodeHandle n;
+        ros::Publisher mapper_pub;
+        ros::Subscriber sub;
+        nav_msgs::MapMetaData mmd;
+        nav_msgs::OccupancyGrid mapGrid;
 	public:
         oGridMaker()
 		{
@@ -34,23 +34,22 @@ class oGridMaker {
             //make map meta data
             mmd.map_load_time = ros::Time::now();
             mmd.resolution = .10;
-            mmd.width = 100;
+            mmd.width = 50;
             mmd.height = 50;
             mmd.origin = createPose();
 
             mapGrid.info = mmd;
-            std::vector<signed char> unkdata (5000,-1);
+            std::vector<signed char> unkdata (2500,-1);
             mapGrid.data = unkdata;
             mapper_pub.publish(mapGrid);
             ROS_INFO("filling in with unknown");
-
 		}
 
         geometry_msgs::Pose createPose()
         {
             geometry_msgs::Point thisp;
-            thisp.x = -1.0;
-            thisp.y = -5.0;
+            thisp.x = -2.0;
+            thisp.y = 0.0;
             thisp.z = 0.0;
 
             geometry_msgs::Quaternion thisq;
@@ -79,18 +78,17 @@ class oGridMaker {
               //number of
             for (int i=0; i < msg->ranges.size(); i++)
             {
-
                 float thisangle = msg->angle_min + i*msg->angle_increment;
                 ROS_INFO("this angle %f", thisangle);
                 float thisrange = msg->ranges[i];
                 ROS_INFO("this range %f", thisrange);
                 if (thisrange > msg->range_min && thisrange < msg->range_max)
                 {
-                    float x = sin(thisangle)*thisrange;
-                    float y = cos(thisangle)*thisrange;
+                    float x = sin(thisangle)*thisrange *1;
+                    float y = cos(thisangle)*thisrange * 1;
 
-                    x = x + 1.0;
-                    y = y + 5.0;
+                    x = x + 10.0;
+                    y = y + 20.0;
                     int ix = int(x);
                     int iy = int(y);
 
@@ -98,7 +96,7 @@ class oGridMaker {
                     updatePosOccGrid(ix,iy);
 
                     //downgrade grids between that range and my position
-                    //updateNegOccGrid(thisrange,thisangle);
+                    updateNegOccGrid(thisrange,thisangle);
                 }
             }
             mapGrid.info = mmd;
@@ -109,7 +107,7 @@ class oGridMaker {
         void updatePosOccGrid(int x, int y)
         {
             ROS_INFO("inside pos");
-          updateOccGrid(x,y,1, mapGrid.data);
+          updateOccGrid(x,y,10, mapGrid.data);
         }
 
         void updateNegOccGrid(float range, float angle)
@@ -132,7 +130,7 @@ class oGridMaker {
                 int iy = int(y);
 
                 //this grid is between the hit range and my position, so I think it is empty
-                updateOccGrid(ix,iy,-1, mapGrid.data);
+                updateOccGrid(ix,iy,-10, mapGrid.data);
 
                 //recursively call until I get to my position
                 if (ix > 1 && iy > 5)
@@ -164,14 +162,9 @@ class oGridMaker {
 	
         void scannerCallBack(const sensor_msgs::LaserScan::ConstPtr& msg)
 		{
-
             //ROS_INFO("Inside Callback");
-
             OGridFromLScan(msg);
-
-
-	  		mapper_pub.publish(mapGrid);
-
+            mapper_pub.publish(mapGrid);
 		}
 
 
