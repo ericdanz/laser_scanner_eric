@@ -22,10 +22,10 @@ class oGridMaker {
 		nav_msgs::MapMetaData mmd;
 		nav_msgs::OccupancyGrid mapGrid;
 	public:
-		oGridMaker(ros::NodeHandle &nh)
+        oGridMaker()
 		{
             ROS_INFO("inside constructor");
-            n = nh;
+
             mapper_pub = n.advertise<nav_msgs::OccupancyGrid>("map_eric", 10, true);
 
             // or scannerCallBack
@@ -33,14 +33,15 @@ class oGridMaker {
 
             //make map meta data
             mmd.map_load_time = ros::Time::now();
-            mmd.resolution = 1.0;
-            mmd.width = 10;
-            mmd.height = 5;
+            mmd.resolution = .10;
+            mmd.width = 100;
+            mmd.height = 50;
             mmd.origin = createPose();
 
             mapGrid.info = mmd;
-            std::vector<signed char> unkdata (50,-1);
+            std::vector<signed char> unkdata (5000,-1);
             mapGrid.data = unkdata;
+            mapper_pub.publish(mapGrid);
             ROS_INFO("filling in with unknown");
 
 		}
@@ -78,21 +79,27 @@ class oGridMaker {
               //number of
             for (int i=0; i < msg->ranges.size(); i++)
             {
+
                 float thisangle = msg->angle_min + i*msg->angle_increment;
+                ROS_INFO("this angle %f", thisangle);
                 float thisrange = msg->ranges[i];
-                float x = sin(thisangle)*thisrange;
-                float y = cos(thisangle)*thisrange;
+                ROS_INFO("this range %f", thisrange);
+                if (thisrange > msg->range_min && thisrange < msg->range_max)
+                {
+                    float x = sin(thisangle)*thisrange;
+                    float y = cos(thisangle)*thisrange;
 
-                x = x + 1.0;
-                y = y + 5.0;
-                int ix = int(x);
-                int iy = int(y);
+                    x = x + 1.0;
+                    y = y + 5.0;
+                    int ix = int(x);
+                    int iy = int(y);
 
-                //find the position on the occupancy grid
-                updatePosOccGrid(ix,iy);
+                    //find the position on the occupancy grid
+                    updatePosOccGrid(ix,iy);
 
-                //downgrade grids between that range and my position
-                updateNegOccGrid(thisrange,thisangle);
+                    //downgrade grids between that range and my position
+                    //updateNegOccGrid(thisrange,thisangle);
+                }
             }
             mapGrid.info = mmd;
 
@@ -102,7 +109,7 @@ class oGridMaker {
         void updatePosOccGrid(int x, int y)
         {
             ROS_INFO("inside pos");
-          updateOccGrid(x,y,1);
+          updateOccGrid(x,y,1, mapGrid.data);
         }
 
         void updateNegOccGrid(float range, float angle)
@@ -111,42 +118,47 @@ class oGridMaker {
            //subtract confidence from grids between that grid and my position
 
             //get the new range (subtract one grid length from my range based on the angle)
-            float subd = 1.0 / sin(angle);
-            range -= subd;
 
-            float x = sin(angle)*range;
-            float y = cos(angle)*range;
-
-            x = x + 1.0;
-            y = y + 5.0;
-            int ix = int(x);
-            int iy = int(y);
-
-            //this grid is between the hit range and my position, so I think it is empty
-            updateOccGrid(ix,iy,-1);
-
-            //recursively call until I get to my position
-            if (ix > 1 && iy > 5)
+            range -= .1;
+            if (range > 0)
             {
-                updateNegOccGrid(range,angle);
+                ROS_INFO("this is the range %f",range);
+                ROS_INFO("this is the angle %f", angle);
+                float x = sin(angle)*range;
+                float y = cos(angle)*range;
+
+
+                int ix = int(x);
+                int iy = int(y);
+
+                //this grid is between the hit range and my position, so I think it is empty
+                updateOccGrid(ix,iy,-1, mapGrid.data);
+
+                //recursively call until I get to my position
+                if (ix > 1 && iy > 5)
+                {
+                    updateNegOccGrid(range,angle);
+                }
             }
 
         }
 
-        void updateOccGrid(int x, int y, int change)
+        void updateOccGrid(int x, int y, int change, std::vector<signed char> thisdata)
         {
            //add confidence to grid that range hit in
-           int grid = x*10 + y;
-           mapGrid.data[grid] += change;
-           ROS_INFO("updating map grids");
-           if (mapGrid.data[grid] > 100)
+           int grid = x*100 + y;
+           thisdata[grid]+= change;
+           ROS_INFO("updating map grids %d", grid);
+           ROS_INFO("this is the val %d", thisdata[grid]);
+           if (thisdata[grid] > 100)
            {
-               mapGrid.data[grid] = 100;
+               thisdata[grid] = 100;
            }
-           else if (mapGrid.data[grid] < 0)
+           else if (thisdata[grid] < 0)
            {
-               mapGrid.data[grid] = 0;
+               thisdata[grid] = 0;
            }
+           mapGrid.data = thisdata;
         }
 
 	
@@ -172,9 +184,7 @@ int main(int argc, char **argv)
   
   	ros::init(argc, argv, "scantomap");
   
-  	ros::NodeHandle nh;
-
-    oGridMaker ogm = oGridMaker(nh);
+    oGridMaker ogm = oGridMaker();
 
   	//ogmaker.initialize(nh);
 
