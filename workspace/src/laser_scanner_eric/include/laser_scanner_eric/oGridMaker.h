@@ -85,16 +85,15 @@ class oGridMaker {
                 if (thisrange > msg->range_min && thisrange < msg->range_max)
                 {
                     ROS_INFO("this range %f", thisrange);
-                    x = sin(thisangle)*thisrange *10;
-                    y = cos(thisangle)*thisrange *10;
+                    x = sin(thisangle)*thisrange *(1/mmd.resolution);
+                    y = cos(thisangle)*thisrange *(1/mmd.resolution);
 
-                    x += 10.0;
-                    y += 20.0;
-                    ix = int(x);
-                    iy = int(y);
+                    x += mmd.origin.position.x;
+                    y += mmd.origin.position.y;
+                    
 
                     //find the position on the occupancy grid
-                    updatePosOccGrid(ix,iy);
+                    updatePosOccGrid(x,y);
 
                     //downgrade grids between that range and my position
                     //updateNegOccGrid(thisrange,thisangle);
@@ -105,7 +104,7 @@ class oGridMaker {
 		}
 
 
-        void updatePosOccGrid(int x, int y)
+        void updatePosOccGrid(float x, float y)
         {
             ROS_INFO("inside pos");
           updateOccGrid(x,y,10, mapGrid.data);
@@ -125,12 +124,8 @@ class oGridMaker {
                 float x = sin(angle)*range;
                 float y = cos(angle)*range;
 
-
-                int ix = int(x);
-                int iy = int(y);
-
                 //this grid is between the hit range and my position, so I think it is empty
-                updateOccGrid(ix,iy,-10, mapGrid.data);
+                updateOccGrid(x,y,-10, mapGrid.data);
 
                 //recursively call until I get to my position
                 if (ix > mmd.origin.position.x && iy > mmd.origin.position.y)
@@ -141,10 +136,10 @@ class oGridMaker {
 
         }
 
-        void updateOccGrid(int x, int y, int change, std::vector<signed char> thisdata)
+        void updateOccGrid(float x, float y, int change, std::vector<signed char> thisdata)
         {
            //add confidence to grid that range hit in
-           int grid = x*100 + y;
+           int grid = x*mmd.width + y;
            thisdata[grid]+= change;
            ROS_INFO("updating map grids %d", grid);
            ROS_INFO("this is the val %d", thisdata[grid]);
