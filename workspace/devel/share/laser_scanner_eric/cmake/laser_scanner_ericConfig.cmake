@@ -153,7 +153,7 @@ foreach(t ${laser_scanner_eric_EXPORTED_TARGETS})
   endif()
 endforeach()
 
-set(depends "roscpp;std_msgs;sensor_msgs;geometry_msgs;nav_msgs;message_runtime")
+set(depends "tf;roscpp;std_msgs;sensor_msgs;geometry_msgs;nav_msgs;message_runtime")
 foreach(depend ${depends})
   string(REPLACE " " ";" depend_list ${depend})
   # the package name of the dependency must be kept in a unique variable so that it is not overwritten in recursive calls

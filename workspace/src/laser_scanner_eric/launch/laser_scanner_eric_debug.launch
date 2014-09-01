@@ -1,0 +1,8 @@
+<launch>
+
+<node pkg="laser_scanner_eric" type="scantomap" name="scantomap" launch-prefix="gdb64 -ex run --args" output="screen">
+       
+    </node>
+
+
+</launch>

@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   nav_msgs
   message_generation
+  tf
 )
 
 ## System dependencies are found with CMake's conventions
@@ -90,7 +91,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES laser_scanner_eric
-  CATKIN_DEPENDS roscpp std_msgs sensor_msgs geometry_msgs nav_msgs message_runtime
+  CATKIN_DEPENDS tf roscpp std_msgs sensor_msgs geometry_msgs nav_msgs message_runtime
 #  DEPENDS system_lib
 )
 
@@ -102,7 +103,9 @@ catkin_package(
 ## Your package locations should be listed before other locations
 # include_directories(include)
 include_directories(
-  ${catkin_INCLUDE_DIRS}
+ include
+ ${catkin_INCLUDE_DIRS}
+ 
 )
 
 ## Declare a cpp library
@@ -172,7 +175,9 @@ include_directories(
 
 add_executable(talker src/talker.cpp)
 add_executable(scantomap src/scantomap.cpp)
+add_executable(frame_tf_broadcaster src/frame_tf_broadcaster.cpp)
 target_link_libraries(talker ${catkin_LIBRARIES})
 target_link_libraries(scantomap ${catkin_LIBRARIES})
+target_link_libraries(frame_tf_broadcaster ${catkin_LIBRARIES})
 add_dependencies(talker beginner_tutorials_generate_messages_cpp)
 add_dependencies(scantomap laser_scanner_eric_generate_messages_cpp)

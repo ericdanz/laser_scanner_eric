@@ -1,0 +1,8 @@
+prefix=/usr/local
+
+Name: laser_scanner_eric
+Description: Description of laser_scanner_eric
+Version: 0.0.0
+Cflags: 
+Libs: -L/usr/local/lib 
+Requires: tf roscpp std_msgs sensor_msgs geometry_msgs nav_msgs message_runtime
